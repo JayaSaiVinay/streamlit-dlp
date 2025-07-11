@@ -15,20 +15,20 @@ def safe_filename(title):
     return re.sub(r'[\\/*?:"<>|]', "", title)
 
 def download_audio(url, output_path=DOWNLOAD_DIR):
-    # Step 1: Get metadata
+    # Get info
     info_opts = {'quiet': True, 'skip_download': True}
     with yt_dlp.YoutubeDL(info_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         raw_title = info['title']
         channel = info.get('uploader', 'Unknown')
-    
-    # Format filename
+
+    # Clean filename
     clean_title = safe_filename(raw_title.split('|')[0].split('-')[0].strip())
     channel = safe_filename(channel.strip())
     filename = f"{clean_title} - {channel}.mp3"
     filename_template = os.path.join(output_path, f"{clean_title} - {channel}.%(ext)s")
 
-    # Step 2: Download
+    # Download with explicit ffmpeg path
     ydl_opts = {
         "format": "bestaudio/best",
         "postprocessors": [{
@@ -36,6 +36,7 @@ def download_audio(url, output_path=DOWNLOAD_DIR):
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }],
+        "ffmpeg_location": "/usr/bin",  # 👈 THIS LINE IS CRUCIAL
         "outtmpl": filename_template,
         "quiet": True,
     }
